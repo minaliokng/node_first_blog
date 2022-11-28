@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const connect = () => {
   mongoose
-    .connect("mongodb://127.0.0.1:27017/first_blog")
+    .connect("mongodb://localhost:27017/first_blog")
     .catch(err => console.log(err));
 };
 
