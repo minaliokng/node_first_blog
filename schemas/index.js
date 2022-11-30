@@ -1,8 +1,13 @@
 const mongoose = require("mongoose");
+require("dotenv").config();
 
 const connect = () => {
+  const name = process.env.Mongo_name;
+  const pw = process.env.Mongo_pw;
+  const collection = process.env.Mongo_collection;
+
   mongoose
-    .connect("mongodb://localhost:27017/first_blog")
+    .connect(`mongodb+srv://${name}:${pw}@${collection}.5agxbtx.mongodb.net/blog?retryWrites=true&w=majority`)
     .catch(err => console.log(err));
 };
 
