@@ -1,0 +1,405 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "My API",
+    "description": "Description",
+    "version": "1.0.0"
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "description": "서버 메인 페이지",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "서버 열림을 확인할 수 있음"
+          },
+          "400": {
+            "description": "서버가 열리지 않음"
+          }
+        }
+      }
+    },
+    "/api/posts/": {
+      "get": {
+        "description": "전체 게시글 목록 조회",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "(예시) \n{\"data\": [\n { \"postid\": 2,\n\"userId\": 1,\n\"title\": \"2번째\",\n\"likes\":1,\n\"createdAt\": \"2022-12-06T17:06:25.000Z\",\n\"updatedAt\": \"2022-12-06T17:06:25.000Z\" },\n{...},\n]}"
+          },
+          "400": {
+            "description": "{\"errorMessage\": \"게시글 조회에 실패하였습니다.\"}"
+          }
+        }
+      },
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "example": "string"
+                },
+                "content": {
+                  "example": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{\"message\": \"게시글 작성에 성공하였습니다.\"}"
+          },
+          "400": {
+            "description": "{\"errorMessage\": \"게시글 조회에 실패하였습니다.\"}"
+          },
+          "412": {
+            "description": "{\"errorMessage\": \"데이터 형식이 올바르지 않습니다.\"}\n{\"errorMessage\": \"게시글 제목의 형식이 일치하지 않습니다.\"}\n{\"errorMessage\": \"게시글 내용의 형식이 일치하지 않습니다.\"}"
+          }
+        }
+      }
+    },
+    "/api/posts/{postId}": {
+      "get": {
+        "description": "게시글 상세 조회",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "(예시)\n{  \"data\": {\n\"postId\": 2,\n\"userId\": 1,\n\"nickname\": \"Developer\",\n\"title\": \"안녕하새요 수정된 게시글 입니다.\",\n\"content\": \"안녕하세요 content 입니다.\",\n\"likes\": 0,\n\"createdAt\": \"2022-07-25T07:45:56.000Z\",\n\"updatedAt\": \"2022-07-25T07:52:09.000Z\"}"
+          },
+          "400": {
+            "description": "{\"errorMessage\": \"게시글 조회에 실패하였습니다.\"}"
+          }
+        }
+      },
+      "put": {
+        "description": "게시글 수정",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "example": "string"
+                },
+                "content": {
+                  "example": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{\"message\": \"게시글을 수정하였습니다.\"}"
+          },
+          "400": {
+            "description": "{\"errorMessage\": \"게시글 수정에 실패하였습니다.\"}"
+          },
+          "401": {
+            "description": "{\"errorMessage\": \"게시글이 정상적으로 수정되지 않았습니다.\"}"
+          },
+          "403": {
+            "description": "{\"errorMessage\": \"해당 게시글의 작성자가 아닙니다.\"}"
+          },
+          "404": {
+            "description": "{\"errorMessage\": \"존재하지 않는 게시글입니다..\"}"
+          },
+          "412": {
+            "description": "{\"errorMessage\": \"데이터 형식이 올바르지 않습니다.\"}\n{\"errorMessage\": \"게시글 제목의 형식이 일치하지 않습니다.\"}\n{\"errorMessage\": \"게시글 내용의 형식이 일치하지 않습니다.\"}"
+          }
+        }
+      },
+      "delete": {
+        "description": "게시글 삭제",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{\"message\": \"게시글을 삭제하였습니다.\"}"
+          },
+          "400": {
+            "description": "{\"errorMessage\": \"게시글 삭제에 실패하였습니다.\"}"
+          },
+          "401": {
+            "description": "{\"errorMessage\": \"게시글이 정상적으로 삭제되지 않았습니다.\"}"
+          },
+          "403": {
+            "description": "{\"errorMessage\": \"해당 게시글의 작성자가 아닙니다.\"}"
+          },
+          "404": {
+            "description": "{\"errorMessage\": \"게시글이 존재하지 않습니다.}"
+          }
+        }
+      }
+    },
+    "/api/posts/like": {
+      "get": {
+        "description": "좋아요 남긴 게시글 확인",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "(예시)\n{\"data\": [ {\n\"postId\":4,\n\"userId\": 1,\n\"nickname\": \"Developer\",\n\"title\": \"안녕하세요 4번째 게시글 제목입니다.\",\n\"likes\": 1,\n\"createdAt\" :\"2022-07-25T07:58:39.000Z\",\n\"updatedAt\": \"2022-07-25T07:58:39.000Z\"}\n] }"
+          },
+          "400": {
+            "description": "{\"errorMessage\": \"좋아요 게시글 조회에 실패하였습니다.\"}"
+          }
+        }
+      }
+    },
+    "/api/posts/{postId}/like": {
+      "put": {
+        "description": "좋아요 등록 / 취소",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{\"message\": \"게시글의 좋아요를 등록하였습니다.\"}\n{\"message\": \"게시글의 좋아요를 취소하였습니다.\"}"
+          },
+          "400": {
+            "description": "{\"errorMessage\": \"게시글 좋아요에 실패하였습니다.\"}"
+          },
+          "404": {
+            "description": "{\"errorMessage\": \"게시글이 존재하지 않습니다.}"
+          }
+        }
+      }
+    },
+    "/api/comments/{postId}": {
+      "get": {
+        "description": "게시글에 대한 댓글 목록 조회",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{\"data\": [{ \n\"commentId\": 2,\n\"userId\": 1,\n\"nickname\": \"Developer\",\n\"comment\": \"2번째 댓글\",\n\"createdAt\": \"2022-07-25T07:54:24.000Z\",\n\"updatedAt\": \"2022-07-25T07:54:24.000Z\"},\n{ ... },\n]}"
+          },
+          "400": {
+            "description": "{\"errorMessage\": \"댓글 조회에 실패하였습니다.\"}"
+          }
+        }
+      },
+      "post": {
+        "description": "해당 게시글에 댓글 생성",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "comment": {
+                  "example": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{\"message\": \"댓글을 작성하였습니다.\"}"
+          },
+          "400": {
+            "description": "{\"errorMessage\": \"댓글 작성에 실패하였습니다.\"}"
+          },
+          "412": {
+            "description": "{\"errorMessage\": \"데이터 형식이 올바르지 않습니다.\"}"
+          }
+        }
+      }
+    },
+    "/api/comments/{commentId}": {
+      "put": {
+        "description": "해당 댓글 수정",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "comment": {
+                  "example": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{\"message\": \"댓글을 수정하였습니다.\"}"
+          },
+          "400": {
+            "description": "{\"errorMessage\": \"데이터 형식이 올바르지 않습니다.\"}"
+          },
+          "401": {
+            "description": "{\"errorMessage\": \"댓글이 정상적으로 수정되지 않았습니다.\"}"
+          },
+          "403": {
+            "description": "{\"errorMessage\": \"해당 댓글의 작성자가 아닙니다.\"}"
+          },
+          "412": {
+            "description": "{\"errorMessage\": \"댓글 내용을 입력해주세요.\"}"
+          }
+        }
+      },
+      "delete": {
+        "description": "해당 댓글 삭제",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{\"message\": \"댓글을 삭제하였습니다.\"}"
+          },
+          "400": {
+            "description": "{\"errorMessage\": \"댓글 삭제에 실패하였습니다.\"}\n{\"errorMessage\": \"댓글 삭제가 정상적으로 처리되지 않았습니다.\"}"
+          },
+          "403": {
+            "description": "{\"errorMessage\": \"해당 댓글의 작성자가 아닙니다.\"}"
+          },
+          "404": {
+            "description": "{\"errorMessage\": \"댓글이 존재하지 않습니다.}"
+          }
+        }
+      }
+    },
+    "/api/logout": {
+      "get": {
+        "description": "로그아웃",
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/api/login": {
+      "post": {
+        "description": "로그인",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nickname": {
+                  "example": "string"
+                },
+                "password": {
+                  "example": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{\"message\": \"eyJhbGciO.......\"}"
+          },
+          "400": {
+            "description": "{\"errorMessage\": \"로그인에 실패하였습니다.\"}"
+          },
+          "412": {
+            "description": "{\"errorMesage\": \"닉네임 또는 패스워드를 확인해주세요.\"}"
+          }
+        }
+      }
+    },
+    "/api/signup": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nickname": {
+                  "example": "string"
+                },
+                "password": {
+                  "example": "string"
+                },
+                "confirm": {
+                  "example": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "{\"message\": \"회원가입에 성공하였습니다.\"}"
+          },
+          "400": {
+            "description": "{\"errorMessage\": \"요청한 데이터 형식이 올바르지 않습니다.\"}"
+          },
+          "412": {
+            "description": "{\"errorMessage\": \"중복된 닉네임입니다.\"},\n{\"errorMessage\": \"패스워드가 일치하지 않습니다.\"},\n{\"errorMessage\": \"ID의 형식이 일치하지 않습니다.\"}, \n{\"errorMessage\": \"패스워드 형식이 일치하지 않습니다.\"},\n{\"errorMessage\": \"패스워드에 닉네임이 포함되어 있습니다.\""
+          }
+        }
+      }
+    }
+  }
+}

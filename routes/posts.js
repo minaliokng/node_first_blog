@@ -1,110 +1,119 @@
 const express = require('express');
 const router = express.Router();
+const { getAccessTokenPayload } = require("../modules/token");
+const { validateToken } = require("../modules/token");
 
-const Posts = require("../schemas/post");
+const { Post } = require("../models");
 
-router.post("/", async (req, res) => {
-  const { title, user, password, content } = req.body;
+const likes = require("./like");
 
+router.get("/", async (req, res) => {
   try{
-    const today = new Date();
-
-    const year = today.getFullYear();
-    const month = ('0' + (today.getMonth() + 1)).slice(-2);
-    const day = ('0' + today.getDate()).slice(-2);
-  
-    const hours = ('0' + (Number(('0' + today.getHours()).slice(-2))+9) % 24).slice(-2);
-    const minutes = ('0' + today.getMinutes()).slice(-2);
-    const seconds = ('0' + today.getSeconds()).slice(-2);
-    const date = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-  
-    await Posts.create({title, user, date, password, content});
-  
-    res.status(200).json({message: '게시글을 생성하였습니다.'});
+    const posts = await Post.findAll({attributes: { exclude: ['content']}}, {order: [['postId', 'DESC']]});
+    return res.status(200).json({"data": posts});
   }
   catch{
-    return res.status(400).json({
-      message: '데이터 형식이 올바르지 않습니다.'
-    });
+    return res.status(400).json({errorMessage: "게시글 조회에 실패하였습니다."})
+  }
+});
+
+router.get("/:postId", async (req, res, next) => {
+  const {postId} = req.params;
+
+  if(postId === 'like') next();
+  else{
+    try{
+      const post = await Post.findOne({where : {"postId": postId}});
+      if(!post) return res.status(200).json({message: "존재하지 않는 게시글입니다."});
+      return res.status(200).json({data: post})
+    }
+    catch{
+      return res.status(400).json({errorMessage: '게시글 조회에 실패하였습니다.'});
+    }
   }  
 });
 
-router.get("/", async (req, res) => {
-  const posts = await Posts.find({}, {"password": 0, "content": 0, "__v": 0}).sort({"_id": -1});
-  const postsList = posts.map((post) => {
-    const postId = post["_id"].toString();
-    return {"postId": postId, title: post["title"], user: post["user"], date: post["date"]}
-  })
-  res.status(200).json({"data": postsList});
-});
+router.use((req, res, next) => {
+  const accessToken = req.cookies.accessToken;
 
-router.get("/:postId", async (req, res) => {
-  const {postId} = req.params;
+  if (!accessToken || !validateToken(accessToken)){
+    return res.status(419).json({errorMessage: "로그인이 필요한 기능입니다."});
+  }
+
+  next();
+})
+
+router.use("/", likes);
+
+router.post("/", async (req, res) => {
+  const { title, content } = req.body;
+  const {userId, nickname} = getAccessTokenPayload(req.cookies.accessToken);
 
   try{
-    const post = await Posts.find({"_id": postId}, {"password": 0, "__v": 0});
-    return res.status(200).json({
-      data: post
-    })
+    if(!title || !content) return res.status(412).json({errorMessage: "데이터 형식이 올바르지 않습니다."});
+    if(!title.trim()) return res.status(412).json({errorMessage: '게시글 제목의 형식이 일치하지 않습니다.'});
+    if(!content.trim()) return res.status(412).json({errorMessage: '게시글 내용의 형식이 일치하지 않습니다.'});
+
+    await Post.create({userId, nickname, title, likes: 0, content});
+  
+    return res.status(200).json({message: '게시글을 생성하였습니다.'});
   }
-  catch{
-    return res.status(400).json({message: '데이터 형식이 올바르지 않습니다.'});
+  catch {
+    return res.status(400).json({errorMessage: '게시글 작성에 실패하였습니다.'});
   }  
 });
 
 router.put("/:postId", async (req, res) => {
   const { postId } = req.params;
-  const { title, password, content } = req.body;
+  const { title, content } = req.body;
+  const {userId} = getAccessTokenPayload(req.cookies.accessToken);
 
-  if(postId.length !== 24) return res.status(400).json({message: '데이터 형식이 올바르지 않습니다.'});
-  if(!title || !password || !content){
-    return res.status(400).json({
-      message: '데이터 형식이 올바르지 않습니다.'
-    });
+  try{
+    if(!title || !content) return res.status(400).json({errorMessage: '데이터 형식이 올바르지 않습니다.'});
+    if(!title.trim()) return res.status(412).json({errorMessage: '게시글 제목의 형식이 일치하지 않습니다.'});
+    if(!content.trim()) return res.status(412).json({errorMessage: '게시글 내용의 형식이 일치하지 않습니다.'});
+  
+    const post = await Post.findOne({where: {"postId": postId}});
+    if(!post){
+      return res.status(404).json({errorMessage: '존재하지 않는 게시글입니다.'});
+    }
+    if(post.userId !== userId) return res.status(403).json({errorMessage:"해당 게시글의 작성자가 아닙니다."});
+  
+    try{
+      await Post.update({"title": title, "content": content}, {where: {"postId": postId}})
+      return res.status(200).json({message:"게시글을 수정하였습니다."})
+    }
+    catch{
+      return res.status(401).json({message:"게시글이 정상적으로 수정되지 않았습니다."})
+    }
   }
-
-  const post = await Posts.find({"_id": postId});
-  if(!post.length){
-    return res.status(400).json({
-      message: '게시글 조회에 실패하였습니다.'
-    });
+  catch{
+    return res.status(400).json({errorMessage: '게시글 수정에 실패하였습니다.'});
   }
-
-  if(post[0]["password"] !== password) return res.status(400).json({
-    message: '비밀번호가 일치하지 않습니다.'
-  })
-
-  await Posts.updateOne({"_id": postId}, {$set: {title, content}})
-  return res.status(200).json({
-    message: '게시글을 수정하였습니다.'
-  })
 })
 
 router.delete("/:postId", async (req, res) => {
-  const { password } = req.body;
   const {postId} = req.params;
+  const {userId} = getAccessTokenPayload(req.cookies.accessToken);
 
   try{
-    const post = await Posts.findOne({"_id": postId});
+    const post = await Post.findOne({where: {"postId": postId}});
     if(!post){
-      return res.status(400).json({
-        message: '게시글 조회에 실패하였습니다.'
-      });
+      return res.status(404).json({errorMessage: '게시글이 존재하지 않습니다.'});
     }
-    if(post["password"] !== password) return res.status(400).json({
-      message: '비밀번호가 일치하지 않습니다.'
-    })
+    if(post.userId !== userId) return res.status(403).json({errorMessage: "해당 게시글의 작성자가 아닙니다."});
   
-    await Posts.deleteOne({postId});
-    return res.status(200).json({
-      message: '게시글을 삭제하였습니다.'
-    })
+    try{
+      await Post.destroy({where: {"postId": postId}});
+      return res.status(200).json({message: '게시글을 삭제하였습니다.'})
+    }
+    catch{
+      return res.status(401).json({errorMessage: "게시글이 정상적으로 삭제되지 않았습니다."})
+    }
   }
-  catch (e){
-    return res.status(400).json({message: '데이터 형식이 올바르지 않습니다.'});
+  catch{
+    return res.status(400).json({errorMessage: '게시글 삭제에 실패하였습니다.'});
   }
-  
-
 })
 
 module.exports = router;
