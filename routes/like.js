@@ -2,16 +2,30 @@ const express = require('express');
 const router = express.Router();
 const { getAccessTokenPayload } = require("../modules/token");
 
-const { Post, Like } = require("../models");
+const { Post, Like, Sequelize, sequelize } = require("../models");
 
 router.get("/like", async (req, res) => {
   const {userId} = getAccessTokenPayload(req.cookies.accessToken);
 
   try{
-    const likes = await Like.findAll({attributes: { exclude: ['content']}}, {where: {userId}}, {order: [['id', 'DESC']]});
+    const likes = await Like.findAll({
+      where: {userId},
+      attributes: [
+        'postId',
+        [Sequelize.col("Post.userId"), 'userId'],
+        [Sequelize.col("Post.nickname"), "nickname"],
+        [Sequelize.col("Post.title"), "title"],
+        [Sequelize.col("Post.likes"), "likes"],
+        [Sequelize.col("Post.createdAt"), "createdAt"],
+        [Sequelize.col("Post.updatedAt"), "updatedAt"],
+      ],
+      order: [[Post, "likes", "DESC"]],
+      include: [{model: Post, attributes: []}],
+    });
     return res.status(200).json({data: likes});
   }
-  catch{
+  catch (e){
+    console.log(e)
     return res.status(400).json({errorMessage: "좋아요 게시글 조회에 실패하였습니다."})
   }
 })
