@@ -15,9 +15,6 @@ app.use(cookieParser());
 const indexRouter = require("./routes/index");
 app.use("/api", [indexRouter]);
 
-app.use("/api", express.urlencoded({ extended: false }), router);
-app.use(express.static("assets"));
-
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
