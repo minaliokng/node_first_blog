@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { validateToken } = require("../modules/token");
+const { getAccessTokenPayload } = require("../modules/token");
 
-const { User, Post, Comment } = require("../models");
+const { Comment } = require("../models");
 
 router.get('/:postId', async (req, res) => {
     const {postId} = req.params;
@@ -17,7 +19,6 @@ router.get('/:postId', async (req, res) => {
 
 router.use((req, res, next) => {
   const accessToken = req.cookies.accessToken;
-  const { validateToken } = require("../modules/token");
 
   if (!accessToken || !validateToken(accessToken)){
     return res.status(419).json({errorMessage: "로그인이 필요한 기능입니다."});
@@ -29,7 +30,6 @@ router.use((req, res, next) => {
 router.post('/:postId', async (req, res) => {
     const {comment} = req.body;
     const {postId} = req.params;
-    const { getAccessTokenPayload } = require("../modules/token");
     const {userId, nickname} = getAccessTokenPayload(req.cookies.accessToken);
 
     try{
@@ -49,7 +49,6 @@ router.post('/:postId', async (req, res) => {
 router.put('/:commentId', async (req, res) => {
     const {commentId} = req.params;
     const {comment} = req.body;
-    const { getAccessTokenPayload } = require("../modules/token");
     const {userId} = getAccessTokenPayload(req.cookies.accessToken);
 
     try{
@@ -74,7 +73,6 @@ router.put('/:commentId', async (req, res) => {
 
 router.delete('/:commentId', async (req, res) => {
     const {commentId} = req.params;
-    const { getAccessTokenPayload } = require("../modules/token");
     const {userId} = getAccessTokenPayload(req.cookies.accessToken);
 
     try{
